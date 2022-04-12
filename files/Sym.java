@@ -14,3 +14,18 @@ public class Sym {
 	}
 }
 
+// name, return type, list of parameter types
+class FnSym {
+	private Type returnType;
+	private List<Type> parameterTypes;
+
+}
+
+class StructDefSym {
+
+}
+
+class StructSym {
+
+}
+
