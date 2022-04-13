@@ -281,6 +281,42 @@ class VarDeclNode extends DeclNode {
         return analysis(symTable, symTable);
     }
 
+    public Sym analysis(SymTable symTable, SymTable parent) {
+
+        //check for voidnode and return error if void
+        //check if myType is a structnode and if so, check if struct is defined
+        //if struct is not defined and sym is null, return error
+        //else link sym to structId
+
+
+
+
+
+
+
+        // check if sym is a voidnode
+        if (sym != null && sym instanceof VoidNode) {
+            ErrMsg.fatal(myId.lineNum(), myId.charNum(),
+                    "Variable name " + myId.name() + " is already defined");
+        }
+        // check if sym is a structnode
+        if (sym != null && sym instanceof StructNode) {
+            //global lookup sym
+            sym = parent.lookup(myId.name());
+
+            //if the name fro the struct type is not found, or is not a struct type
+            if (sym == null || !(sym instanceof StructNode)) {
+                ErrMsg.fatal(myId.lineNum(), myId.charNum(),
+                        "Variable name " + myId.name() + " is not defined");
+            }
+            else {
+                //link sym
+
+            }
+
+        }
+    }
+
     public void unparse(PrintWriter p, int indent) {
         doIndent(p, indent);
         myType.unparse(p, 0);
@@ -583,6 +619,12 @@ class WhileStmtNode extends StmtNode {
     private DeclListNode myDeclList;
     private StmtListNode myStmtList;
 }
+
+
+
+// TODO: Kevin and Bobby split here
+
+
 
 class CallStmtNode extends StmtNode {
     public CallStmtNode(CallExpNode call) {
