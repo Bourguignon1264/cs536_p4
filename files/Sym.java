@@ -54,10 +54,26 @@ class FnSym {
 }
 
 class StructDefSym {
+	private SymTable symTable;
 
+	public StructDefSym(SymTable symTable) {
+		this.symTable = symTable;
+	}
+
+	public SymTable getSymTable() {
+		return symTable;
+	}
 }
 
 class StructSym {
+	private String structType;
 
+	public StructSym(String structType) {
+		this.structType = structType;
+	}
+
+	public String getStructType() {
+		return structType;
+	}
 }
 
