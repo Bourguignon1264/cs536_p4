@@ -631,6 +631,10 @@ class CallStmtNode extends StmtNode {
         myCall = call;
     }
 
+    public void nameAnalysis(SymTable symTab) {
+        myCall.analysis(symTab);
+    }
+
     public void unparse(PrintWriter p, int indent) {
         doIndent(p, indent);
         myCall.unparse(p, indent);
@@ -644,6 +648,12 @@ class CallStmtNode extends StmtNode {
 class ReturnStmtNode extends StmtNode {
     public ReturnStmtNode(ExpNode exp) {
         myExp = exp;
+    }
+
+    public void analysis(SymTable symTab){
+        if(myExp != null){
+            myExp.analysis(symTab);
+        }
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -665,6 +675,8 @@ class ReturnStmtNode extends StmtNode {
 // **********************************************************************
 
 abstract class ExpNode extends ASTnode {
+    public void analysis(SymTable symTab){
+    }
 }
 
 class IntLitNode extends ExpNode {
@@ -734,6 +746,25 @@ class IdNode extends ExpNode {
         myStrVal = strVal;
     }
 
+    public void analysis(SymTable symTab) {
+        Sym foundGlobe = lookupHelper(symTab, myStrVal);
+        if (foundGlobe != null) {
+            symbol = foundGlobe;
+            return;
+        } else {
+            ErrMsg.fatal(myLineNum, myCharNum, "Undeclared identifier");
+        }
+    }
+
+    public Sym lookupHelper(SymTable symtab, String myStrVal){
+        try {
+            return symtab.lookupGlobal(myStrVal);
+        } catch (Exception e) {
+            System.out.println("This should never happen");
+            return null;
+        }
+    }
+
     public void unparse(PrintWriter p, int indent) {
         p.print(myStrVal);
     }
@@ -741,6 +772,7 @@ class IdNode extends ExpNode {
     private int myLineNum;
     private int myCharNum;
     private String myStrVal;
+    private Sym symbol;
 }
 
 class DotAccessExpNode extends ExpNode {
@@ -765,6 +797,11 @@ class AssignExpNode extends ExpNode {
     public AssignExpNode(ExpNode lhs, ExpNode exp) {
         myLhs = lhs;
         myExp = exp;
+    }
+
+    public void analysis(SymTable symTab){
+        myLhs.analysis(symTab);
+        myExp.analysis(symTab);
     }
 
     // ** unparse **
@@ -792,6 +829,12 @@ class CallExpNode extends ExpNode {
         myExpList = new ExpListNode(new LinkedList<ExpNode>());
     }
 
+    public void analysis(SymTable symTab){
+        myId.analysis(symTab);
+        myExpList.analysis(symTab);
+
+    }
+
     public void unparse(PrintWriter p, int indent) {
         myId.unparse(p, 0);
         p.print("(");
@@ -811,6 +854,10 @@ abstract class UnaryExpNode extends ExpNode {
         myExp = exp;
     }
 
+    public void analysis(SymTable symTab){
+        myExp.analysis(symTab);
+    }
+
     // one kid
     protected ExpNode myExp;
 }
@@ -819,6 +866,13 @@ abstract class BinaryExpNode extends ExpNode {
     public BinaryExpNode(ExpNode exp1, ExpNode exp2) {
         myExp1 = exp1;
         myExp2 = exp2;
+    }
+
+    public void analysis(SymTable symTab){
+        myExp1.analysis(symTab);
+        myExp2.analysis(symTab);
+
+
     }
 
     // two kids
