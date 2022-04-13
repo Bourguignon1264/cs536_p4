@@ -268,6 +268,7 @@ class ExpListNode extends ASTnode {
 // **********************************************************************
 
 abstract class DeclNode extends ASTnode {
+    abstract public Sym analysis(SymTable symTable);
 }
 
 class VarDeclNode extends DeclNode {
@@ -283,10 +284,56 @@ class VarDeclNode extends DeclNode {
 
     public Sym analysis(SymTable symTable, SymTable parent) {
 
+        // if this name is declared void, then print error
+        if (myType instanceof VoidNode) {
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
+                    "Non-function declared void");
+        }
+
+
+
+        if (myType instanceof StructNode) {
+            // lookup name globally.  if it doesn't exist, print error
+            Sym sym = symTable.lookupGlobal(myId.name());
+            if (sym == null) {
+                ErrMsg.fatal(myId.lineNum(), myId.charNum(),
+                        "Identifier undeclared");
+            }
+            // if there are no duplicates, then add this name to the symbol table
+
+        }
+
+        //
+
+
+
+
+        // if name has already been declared in this scope, print error
+        if (symTable.lookupLocal(myId.name()) != null) {
+            ErrMsg.fatal(myId.lineNum(), myId.charNum(),
+                    "Identifier multiply-declared");
+        }
+
+        // else add name to local symbol table
+        symTable.addDecl(myId.name(), myType, mySize);
+
+
+
+
+        // if more than one declaration of an identifier in a given scope (note: includes identifier associated with a struct definition), print error
+        if (symTable.lookup(myId.getName()) != null) {
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Identifier " + myId.getName() + " is already declared");
+        }
+
+        // if Use of an undeclared identifier, print error
+
+
+
         //check for voidnode and return error if void
         //check if myType is a structnode and if so, check if struct is defined
         //if struct is not defined and sym is null, return error
         //else link sym to structId
+
 
 
 
@@ -457,6 +504,7 @@ class StructNode extends TypeNode {
 // **********************************************************************
 
 abstract class StmtNode extends ASTnode {
+    abstract public void analysis(SymTable symTable);
 }
 
 class AssignStmtNode extends StmtNode {
@@ -472,6 +520,11 @@ class AssignStmtNode extends StmtNode {
 
     // one kid
     private AssignExpNode myAssign;
+
+    @Override
+    public void analysis(SymTable symTable) {
+        myAssign.analysis(symTable);
+    }
 }
 
 class PostIncStmtNode extends StmtNode {
@@ -487,6 +540,11 @@ class PostIncStmtNode extends StmtNode {
 
     // one kid
     private ExpNode myExp;
+
+    @Override
+    public void analysis(SymTable symTable) {
+        myExp.analysis(symTable);
+    }
 }
 
 class PostDecStmtNode extends StmtNode {
@@ -502,6 +560,11 @@ class PostDecStmtNode extends StmtNode {
 
     // one kid
     private ExpNode myExp;
+
+    @Override
+    public void analysis(SymTable symTable) {
+        myExp.analysis(symTable);
+    }
 }
 
 class ReadStmtNode extends StmtNode {
@@ -518,6 +581,11 @@ class ReadStmtNode extends StmtNode {
 
     // one kid (actually can only be an IdNode or an ArrayExpNode)
     private ExpNode myExp;
+
+    @Override
+    public void analysis(SymTable symTable) {
+        myExp.analysis(symTable);
+    }
 }
 
 class WriteStmtNode extends StmtNode {
@@ -534,6 +602,11 @@ class WriteStmtNode extends StmtNode {
 
     // one kid
     private ExpNode myExp;
+
+    @Override
+    public void analysis(SymTable symTable) {
+        myExp.analysis(symTable);
+    }
 }
 
 class IfStmtNode extends StmtNode {
@@ -558,6 +631,18 @@ class IfStmtNode extends StmtNode {
     private ExpNode myExp;
     private DeclListNode myDeclList;
     private StmtListNode myStmtList;
+
+    @Override
+    public void analysis(SymTable symTable) {
+        myExp.analysis(symTable);
+
+        symTable.addScope();
+
+        myDeclList.analysis(symTable);
+        myStmtList.analysis(symTable);
+
+        symTable.removeScope();
+    }
 }
 
 class IfElseStmtNode extends StmtNode {
@@ -594,6 +679,25 @@ class IfElseStmtNode extends StmtNode {
     private StmtListNode myThenStmtList;
     private StmtListNode myElseStmtList;
     private DeclListNode myElseDeclList;
+
+    @Override
+    public void analysis(SymTable symTable) {
+        myExp.analysis(symTable);
+
+        symTable.addScope();
+
+        myThenDeclList.analysis(symTable);
+        myThenStmtList.analysis(symTable);
+
+        symTable.removeScope();
+
+        symTable.addScope();
+
+        myElseDeclList.analysis(symTable);
+        myElseStmtList.analysis(symTable);
+
+        symTable.removeScope();
+    }
 }
 
 class WhileStmtNode extends StmtNode {
@@ -618,6 +722,18 @@ class WhileStmtNode extends StmtNode {
     private ExpNode myExp;
     private DeclListNode myDeclList;
     private StmtListNode myStmtList;
+
+    @Override
+    public void analysis(SymTable symTable) {
+        myExp.analysis(symTable);
+
+        symTable.addScope();
+
+        myDeclList.analysis(symTable);
+        myStmtList.analysis(symTable);
+
+        symTable.removeScope();
+    }
 }
 
 
