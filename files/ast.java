@@ -283,85 +283,75 @@ class VarDeclNode extends DeclNode {
     }
 
     public Sym analysis(SymTable symTable, SymTable parent) {
+        String structId = null;
+        Sym globalSym = null;
+        Sym localSym = null;
 
-        // if this name is declared void, then print error
         if (myType instanceof VoidNode) {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                     "Non-function declared void");
+
+            return globalSym;
         }
-
-
 
         if (myType instanceof StructNode) {
-            // lookup name globally.  if it doesn't exist, print error
-            Sym sym = symTable.lookupGlobal(myId.name());
-            if (sym == null) {
-                ErrMsg.fatal(myId.lineNum(), myId.charNum(),
+            structId = ((StructNode)myType).getId();
+            try {
+                globalSym = symTable.lookupGlobal(structId);
+            } catch(EmptySymTableException e) {
+                System.err.println("Empty symbol table");
+                System.exit(-1);
+            }
+
+            if (globalSym == null) {
+                ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                         "Identifier undeclared");
-            }
-            // if there are no duplicates, then add this name to the symbol table
 
+                return globalSym;
+            }
+
+            else if (!(globalSym instanceof StructDefSym)) {
+                ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
+                        "Name of struct type invalid");
+
+                return globalSym;
+            }
         }
 
-        //
+        try {
+            localSym = symTable.lookupLocal(myId.name());
+        } catch(EmptySymTableException e) {
+            System.err.println("Empty symbol table");
+            System.exit(-1);
+        }
 
-
-
-
-        // if name has already been declared in this scope, print error
-        if (symTable.lookupLocal(myId.name()) != null) {
-            ErrMsg.fatal(myId.lineNum(), myId.charNum(),
+        if (localSym != null) {
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                     "Identifier multiply-declared");
+
+            return globalSym;
         }
 
-        // else add name to local symbol table
-        symTable.addDecl(myId.name(), myType, mySize);
-
-
-
-
-        // if more than one declaration of an identifier in a given scope (note: includes identifier associated with a struct definition), print error
-        if (symTable.lookup(myId.getName()) != null) {
-            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Identifier " + myId.getName() + " is already declared");
-        }
-
-        // if Use of an undeclared identifier, print error
-
-
-
-        //check for voidnode and return error if void
-        //check if myType is a structnode and if so, check if struct is defined
-        //if struct is not defined and sym is null, return error
-        //else link sym to structId
-
-
-
-
-
-
-
-
-        // check if sym is a voidnode
-        if (sym != null && sym instanceof VoidNode) {
-            ErrMsg.fatal(myId.lineNum(), myId.charNum(),
-                    "Variable name " + myId.name() + " is already defined");
-        }
-        // check if sym is a structnode
-        if (sym != null && sym instanceof StructNode) {
-            //global lookup sym
-            sym = parent.lookup(myId.name());
-
-            //if the name fro the struct type is not found, or is not a struct type
-            if (sym == null || !(sym instanceof StructNode)) {
-                ErrMsg.fatal(myId.lineNum(), myId.charNum(),
-                        "Variable name " + myId.name() + " is not defined");
+        try {
+            if (myType instanceof StructNode) {
+                globalSym = new StructSym(structId);
             }
+
             else {
-                //link sym
-
+                globalSym = (StructDefSym)(symTable.lookupGlobal(structId));
             }
 
+            symTable.addDecl(myId.name(), globalSym);
+            myId.setSym(globalSym);
+        } catch (DuplicateSymException e) {
+            System.err.println("Identifier multiply-declared");
+            System.exit(-1);
+        } catch(EmptySymTableException e) {
+            System.err.println("Empty symbol table");
+            System.exit(-1);
         }
+
+        return globalSym;
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -488,6 +478,14 @@ class VoidNode extends TypeNode {
 class StructNode extends TypeNode {
     public StructNode(IdNode id) {
         myId = id;
+    }
+
+    public String getId() {
+        return myId.getString();
+    }
+
+    public IdNode idNode() {
+        return myId;
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -860,6 +858,30 @@ class IdNode extends ExpNode {
         myLineNum = lineNum;
         myCharNum = charNum;
         myStrVal = strVal;
+    }
+
+    public void setSym(Sym globalSym) {
+        symbol = globalSym;
+    }
+
+    public String getString() {
+        return myStrVal;
+    }
+
+    public String name() {
+        return null;
+    }
+
+    public int getCharNum() {
+        return myCharNum;
+    }
+
+    public int getLineNum() {
+        return myLineNum;
+    }
+
+    public String getStrVal() {
+        return myStrVal;
     }
 
     public void analysis(SymTable symTab) {

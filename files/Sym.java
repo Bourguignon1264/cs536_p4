@@ -18,11 +18,12 @@ public class Sym {
 }
 
 // name, return type, list of parameter types
-class FnSym {
+class FnSym extends Sym{
 	private String returnType;
 	private List<String> parameterTypes;
 
 	public FnSym(String retType, List<String> paramTypes) {
+		super(retType);
 		this.returnType = retType;
 		this.parameterTypes = paramTypes;
 	}
@@ -53,10 +54,12 @@ class FnSym {
 	}
 }
 
-class StructDefSym {
+class StructDefSym extends Sym{
 	private SymTable symTable;
 
 	public StructDefSym(SymTable symTable) {
+		// TODO is this .toString() correct?
+		super(symTable.toString());
 		this.symTable = symTable;
 	}
 
@@ -65,15 +68,16 @@ class StructDefSym {
 	}
 }
 
-class StructSym {
+class StructSym extends Sym{
 	private String structType;
 
 	public StructSym(String structType) {
+		super(structType);
 		this.structType = structType;
 	}
 
 	public String getStructType() {
-		return structType;
+		return this.structType;
 	}
 }
 
