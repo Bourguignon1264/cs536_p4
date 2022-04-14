@@ -145,7 +145,7 @@ class DeclListNode extends ASTnode {
     public List<Sym> analysis(SymTable symTable) {
         List<Sym> symList = new ArrayList<Sym>();
         for (int i = 0; i < myDecls.size(); i++) {
-            symList.addAll(myDecls.get(i).analysis(symTable));
+            symList.add(myDecls.get(i).analysis(symTable));
         }
         return symList;
     }
@@ -174,7 +174,7 @@ class FormalsListNode extends ASTnode {
     public List<Sym> analysis(SymTable symTable) {
         List<Sym> symList = new ArrayList<Sym>();
         for (int i = 0; i < myFormals.size(); i++) {
-            symList.addAll(myFormals.get(i).analysis(symTable));
+            symList.add(myFormals.get(i).analysis(symTable));
         }
         return symList;
     }
@@ -519,7 +519,6 @@ class AssignStmtNode extends StmtNode {
     // one kid
     private AssignExpNode myAssign;
 
-    @Override
     public void analysis(SymTable symTable) {
         myAssign.analysis(symTable);
     }
@@ -539,7 +538,6 @@ class PostIncStmtNode extends StmtNode {
     // one kid
     private ExpNode myExp;
 
-    @Override
     public void analysis(SymTable symTable) {
         myExp.analysis(symTable);
     }
@@ -559,7 +557,6 @@ class PostDecStmtNode extends StmtNode {
     // one kid
     private ExpNode myExp;
 
-    @Override
     public void analysis(SymTable symTable) {
         myExp.analysis(symTable);
     }
@@ -580,7 +577,6 @@ class ReadStmtNode extends StmtNode {
     // one kid (actually can only be an IdNode or an ArrayExpNode)
     private ExpNode myExp;
 
-    @Override
     public void analysis(SymTable symTable) {
         myExp.analysis(symTable);
     }
@@ -601,7 +597,6 @@ class WriteStmtNode extends StmtNode {
     // one kid
     private ExpNode myExp;
 
-    @Override
     public void analysis(SymTable symTable) {
         myExp.analysis(symTable);
     }
@@ -630,7 +625,6 @@ class IfStmtNode extends StmtNode {
     private DeclListNode myDeclList;
     private StmtListNode myStmtList;
 
-    @Override
     public void analysis(SymTable symTable) {
         myExp.analysis(symTable);
 
@@ -639,7 +633,12 @@ class IfStmtNode extends StmtNode {
         myDeclList.analysis(symTable);
         myStmtList.analysis(symTable);
 
-        symTable.removeScope();
+        try {
+            symTable.removeScope();
+        } catch(EmptySymTableException e) {
+            System.err.println("Empty symbol table");
+            System.exit(-1);
+        }
     }
 }
 
@@ -678,7 +677,6 @@ class IfElseStmtNode extends StmtNode {
     private StmtListNode myElseStmtList;
     private DeclListNode myElseDeclList;
 
-    @Override
     public void analysis(SymTable symTable) {
         myExp.analysis(symTable);
 
@@ -687,14 +685,24 @@ class IfElseStmtNode extends StmtNode {
         myThenDeclList.analysis(symTable);
         myThenStmtList.analysis(symTable);
 
-        symTable.removeScope();
+        try {
+            symTable.removeScope();
+        } catch(EmptySymTableException e) {
+            System.err.println("Empty symbol table");
+            System.exit(-1);
+        }
 
         symTable.addScope();
 
         myElseDeclList.analysis(symTable);
         myElseStmtList.analysis(symTable);
 
-        symTable.removeScope();
+        try {
+            symTable.removeScope();
+        } catch(EmptySymTableException e) {
+            System.err.println("Empty symbol table");
+            System.exit(-1);
+        }
     }
 }
 
@@ -721,7 +729,6 @@ class WhileStmtNode extends StmtNode {
     private DeclListNode myDeclList;
     private StmtListNode myStmtList;
 
-    @Override
     public void analysis(SymTable symTable) {
         myExp.analysis(symTable);
 
@@ -730,7 +737,12 @@ class WhileStmtNode extends StmtNode {
         myDeclList.analysis(symTable);
         myStmtList.analysis(symTable);
 
-        symTable.removeScope();
+        try {
+            symTable.removeScope();
+        } catch(EmptySymTableException e) {
+            System.err.println("Empty symbol table");
+            System.exit(-1);
+        }
     }
 }
 
@@ -745,7 +757,7 @@ class CallStmtNode extends StmtNode {
         myCall = call;
     }
 
-    public void nameAnalysis(SymTable symTab) {
+    public void analysis(SymTable symTab) {
         myCall.analysis(symTab);
     }
 
