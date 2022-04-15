@@ -318,6 +318,8 @@ class VarDeclNode extends DeclNode {
             }
         }
 
+
+        // TODO: restructure and take out local lookup?
         try {
             localSym = symTable.lookupLocal(myId.name());
         } catch(EmptySymTableException e) {
@@ -343,11 +345,11 @@ class VarDeclNode extends DeclNode {
 
             symTable.addDecl(myId.name(), globalSym);
             myId.setSym(globalSym);
-        } catch (DuplicateSymException e) {
-            System.err.println("Identifier multiply-declared");
-            System.exit(-1);
         } catch(EmptySymTableException e) {
             System.err.println("Empty symbol table");
+            System.exit(-1);
+        } catch (DuplicateSymException e) {
+            System.err.println("Identifier multiply-declared");
             System.exit(-1);
         }
 
@@ -381,6 +383,29 @@ class FnDeclNode extends DeclNode {
         myBody = body;
     }
 
+    public Sym analysis(SymTable symTable) {
+        FnSym sym = null;
+
+        try {
+            sym = new FnSym(myType.getType().toString(), myFormalsList);
+            symTable.addDecl(myId.name(), sym);
+            myId.setSym(sym);
+        } catch (EmptySymTableException e) {
+            System.err.println("Empty symbol table");
+            System.exit(-1);
+        } catch (DuplicateSymException e) {
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
+                    "Identifier multiply-declared");
+        }
+
+        symTable.addScope();
+
+        myFormalsList.analysis(symTable);
+        myBody.analysis(symTable);
+
+        symTable.removeScope();
+    }
+
     public void unparse(PrintWriter p, int indent) {
         doIndent(p, indent);
         myType.unparse(p, 0);
@@ -406,6 +431,31 @@ class FormalDeclNode extends DeclNode {
         myId = id;
     }
 
+    public Sym analysis(SymTable symTable) {
+        Sym sym = null;
+
+        try {
+            if (myType instanceof VoidNode) {
+                ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
+                        "Non-function declared void");
+
+                return sym;
+            }
+
+            sym = new Sym(myType.getType().toString());
+            symTable.addDecl(myId.name(), sym);
+            myId.setSym(sym);
+        } catch (EmptySymTableException e) {
+            System.err.println("Empty symbol table");
+            System.exit(-1);
+        } catch (DuplicateSymException e) {
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
+                    "Identifier multiply-declared");
+        }
+
+        return sym;
+    }
+
     public void unparse(PrintWriter p, int indent) {
         myType.unparse(p, 0);
         p.print(" ");
@@ -421,6 +471,11 @@ class StructDeclNode extends DeclNode {
     public StructDeclNode(IdNode id, DeclListNode declList) {
         myId = id;
         myDeclList = declList;
+    }
+
+    public Sym analysis(SymTable symTable) {
+        SymTable table = new SymTable();
+        myDeclList.analysis(table, symTable);
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -444,6 +499,7 @@ class StructDeclNode extends DeclNode {
 // **********************************************************************
 
 abstract class TypeNode extends ASTnode {
+    abstract public Sym getType();
 }
 
 class IntNode extends TypeNode {
@@ -452,6 +508,10 @@ class IntNode extends TypeNode {
 
     public void unparse(PrintWriter p, int indent) {
         p.print("int");
+    }
+
+    public Sym getType() {
+        return new Sym("int");
     }
 
     //
@@ -464,6 +524,10 @@ class BoolNode extends TypeNode {
     public void unparse(PrintWriter p, int indent) {
         p.print("bool");
     }
+
+    public Sym getType() {
+        return new Sym("bool");
+    }
 }
 
 class VoidNode extends TypeNode {
@@ -472,6 +536,10 @@ class VoidNode extends TypeNode {
 
     public void unparse(PrintWriter p, int indent) {
         p.print("void");
+    }
+
+    public Sym getType() {
+        return new Sym("void");
     }
 }
 
@@ -486,6 +554,10 @@ class StructNode extends TypeNode {
 
     public IdNode idNode() {
         return myId;
+    }
+
+    public Sym getType() {
+        return new Sym("struct");
     }
 
     public void unparse(PrintWriter p, int indent) {
