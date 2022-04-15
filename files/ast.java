@@ -287,7 +287,6 @@ abstract class DeclNode extends ASTnode {
     abstract public Sym analysis(SymTable symTable);
 }
 
-// TODO: change
 class VarDeclNode extends DeclNode {
     public VarDeclNode(TypeNode type, IdNode id, int size) {
         myType = type;
@@ -303,12 +302,13 @@ class VarDeclNode extends DeclNode {
         String structId = null;
         Sym globalSym = null;
         Sym localSym = null;
+        int errCount = 0;
 
         if (myType instanceof VoidNode) {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                     "Non-function declared void");
 
-            return globalSym;
+            errCount++;
         }
 
         if (myType instanceof StructNode) {
@@ -324,44 +324,54 @@ class VarDeclNode extends DeclNode {
                 ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                         "Identifier undeclared");
 
-                return globalSym;
-            }
-
-            else if (!(globalSym instanceof StructDefSym)) {
-                ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
-                        "Name of struct type invalid");
-
-                return globalSym;
-            }
-        }
-
-
-        // // TODO: restructure and take out local lookup?
-        // try {
-        //     localSym = symTable.lookupLocal(myId.name());
-        // } catch(EmptySymTableException e) {
-        //     System.err.println("Empty symbol table");
-        //     System.exit(-1);
-        // }
-
-        // if (localSym != null) {
-        //     ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
-        //             "Identifier multiply-declared");
-
-        //     return globalSym;
-        // }
-
-        try {
-            if (myType instanceof StructNode) {
-                globalSym = new StructSym(structId);
+                errCount++;
             }
 
             else {
-                globalSym = (StructDefSym)(symTable.lookupGlobal(structId));
+                try {
+                    if (!symTable.lookupGlobal(structId).getType().equals("struct")) {
+                        ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
+                                "Name of struct type invalid");
+
+                        errCount++;
+                    }
+                } catch (EmptySymTableException e) {
+                    System.err.println("Empty symbol table");
+                    System.exit(-1);
+                }
+            }
+        }
+
+        try {
+            localSym = symTable.lookupLocal(myId.name());
+        } catch(EmptySymTableException e) {
+            System.err.println("Empty symbol table");
+            System.exit(-1);
+        }
+
+        if (localSym != null) {
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
+                    "Identifier multiply-declared");
+
+            errCount++;
+        }
+
+        globalSym = helperVar(globalSym, structId, symTable);
+        return globalSym;
+    }
+
+    public Sym helperVar(Sym helpGlobalSym, String helpStructId, SymTable helpSymTable) {
+        try {
+            if (myType instanceof StructNode) {
+                helpGlobalSym = new StructSym(helpStructId);
             }
 
-            symTable.addDecl(myId.name(), globalSym);
-            myId.setSym(globalSym);
+            else {
+                helpGlobalSym = new Sym(myType.getSymbol().toString());
+            }
+
+            helpSymTable.addDecl(myId.name(), helpGlobalSym);
+            myId.setSym(helpGlobalSym);
         } catch(EmptySymTableException e) {
             System.err.println("Empty symbol table");
             System.exit(-1);
@@ -373,7 +383,7 @@ class VarDeclNode extends DeclNode {
             System.exit(-1);
         }
 
-        return globalSym;
+        return helpGlobalSym;
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -407,7 +417,7 @@ class FnDeclNode extends DeclNode {
         FnSym sym = null;
 
         try {
-            sym = new FnSym(myType.getType().toString(), myFormalsList.size());
+            sym = new FnSym(myType.getSymbol().toString(), myFormalsList.size());
             symTable.addDecl(myId.name(), sym);
             myId.setSym(sym);
         } catch (EmptySymTableException e) {
@@ -472,7 +482,7 @@ class FormalDeclNode extends DeclNode {
                 return sym;
             }
 
-            sym = new Sym(myType.getType().toString());
+            sym = new Sym(myType.getSymbol().toString());
             symTable.addDecl(myId.name(), sym);
             myId.setSym(sym);
         } catch (EmptySymTableException e) {
@@ -548,7 +558,7 @@ class StructDeclNode extends DeclNode {
 // **********************************************************************
 
 abstract class TypeNode extends ASTnode {
-    abstract public Sym getType();
+    abstract public Sym getSymbol();
 }
 
 class IntNode extends TypeNode {
@@ -559,7 +569,7 @@ class IntNode extends TypeNode {
         p.print("int");
     }
 
-    public Sym getType() {
+    public Sym getSymbol() {
         return new Sym("int");
     }
 
@@ -574,7 +584,7 @@ class BoolNode extends TypeNode {
         p.print("bool");
     }
 
-    public Sym getType() {
+    public Sym getSymbol() {
         return new Sym("bool");
     }
 }
@@ -587,7 +597,7 @@ class VoidNode extends TypeNode {
         p.print("void");
     }
 
-    public Sym getType() {
+    public Sym getSymbol() {
         return new Sym("void");
     }
 }
@@ -605,7 +615,7 @@ class StructNode extends TypeNode {
         return myId;
     }
 
-    public Sym getType() {
+    public Sym getSymbol() {
         return new Sym("struct");
     }
 
@@ -867,12 +877,6 @@ class WhileStmtNode extends StmtNode {
     }
 }
 
-
-
-// TODO: Kevin and Bobby split here
-
-
-
 class CallStmtNode extends StmtNode {
     public CallStmtNode(CallExpNode call) {
         myCall = call;
@@ -1002,7 +1006,7 @@ class IdNode extends ExpNode {
     }
 
     public String name() {
-        return null;
+        return myStrVal;
     }
 
     public int getCharNum() {
