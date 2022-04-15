@@ -20,38 +20,25 @@ public class Sym {
 // name, return type, list of parameter types
 class FnSym extends Sym{
 	private String returnType;
-	private List<String> parameterTypes;
+	private int parameters;
 
-	public FnSym(String retType, List<String> paramTypes) {
-		super(retType);
-		this.returnType = retType;
-		this.parameterTypes = paramTypes;
+	public FnSym(String returnType, int parameters) {
+		super(returnType);
+		this.returnType = returnType;
+		this.parameters = parameters;
 	}
 
 	public String getReturnType() {
 		return returnType;
 	}
 
-	public List<String> getParameterTypes() {
-		return parameterTypes;
+	public int getParameters() {
+		return parameters;
 	}
 
-	public void addParameters(List<String> paramTypes) {
-		this.parameterTypes.addAll(paramTypes);
-	}
-
-	// for testing
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(returnType);
-		sb.append("(");
-		for (String paramType : parameterTypes) {
-			sb.append(paramType);
-			sb.append(", ");
-		}
-		sb.append(")");
-		return sb.toString();
-	}
+	// public String toString() {
+	// 	return "FnSym(" + returnType + ", " + parameters + ")";
+	// }
 }
 
 class StructDefSym extends Sym{

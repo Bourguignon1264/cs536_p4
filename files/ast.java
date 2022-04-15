@@ -125,7 +125,8 @@ class ProgramNode extends ASTnode {
         myDeclList = L;
     }
 
-    public void analysis(SymTable symTable) {
+    public void analysis() {
+        SymTable symTable = new SymTable();
         myDeclList.analysis(symTable);
     }
 
@@ -203,6 +204,10 @@ class FormalsListNode extends ASTnode {
 
     // list of kids (FormalDeclNodes)
     private List<FormalDeclNode> myFormals;
+
+    public int size() {
+        return myFormals.size();
+    }
 }
 
 class FnBodyNode extends ASTnode {
@@ -399,7 +404,7 @@ class FnDeclNode extends DeclNode {
         FnSym sym = null;
 
         try {
-            sym = new FnSym(myType.getType().toString(), myFormalsList);
+            sym = new FnSym(myType.getType().toString(), myFormalsList.size());
             symTable.addDecl(myId.name(), sym);
             myId.setSym(sym);
         } catch (EmptySymTableException e) {
@@ -415,7 +420,14 @@ class FnDeclNode extends DeclNode {
         myFormalsList.analysis(symTable);
         myBody.analysis(symTable);
 
-        symTable.removeScope();
+        try {
+            symTable.removeScope();
+        } catch(EmptySymTableException e) {
+            System.err.println("Empty symbol table");
+            System.exit(-1);
+        }
+
+        return null;
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -486,8 +498,21 @@ class StructDeclNode extends DeclNode {
     }
 
     public Sym analysis(SymTable symTable) {
-        SymTable table = new SymTable();
-        myDeclList.analysis(table, symTable);
+        SymTable parent = new SymTable();
+        myDeclList.analysis(parent, symTable);
+
+        try {
+            symTable.addDecl(myId.name(), new StructDefSym(parent));
+            myId.setSym(symTable.lookupGlobal(myId.name()));
+        } catch (EmptySymTableException e) {
+            System.err.println("Empty symbol table");
+            System.exit(-1);
+        } catch (DuplicateSymException e) {
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
+                    "Identifier multiply-declared");
+        }
+
+        return null;
     }
 
     public void unparse(PrintWriter p, int indent) {
