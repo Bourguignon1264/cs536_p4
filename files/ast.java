@@ -336,20 +336,20 @@ class VarDeclNode extends DeclNode {
         }
 
 
-        // TODO: restructure and take out local lookup?
-        try {
-            localSym = symTable.lookupLocal(myId.name());
-        } catch(EmptySymTableException e) {
-            System.err.println("Empty symbol table");
-            System.exit(-1);
-        }
+        // // TODO: restructure and take out local lookup?
+        // try {
+        //     localSym = symTable.lookupLocal(myId.name());
+        // } catch(EmptySymTableException e) {
+        //     System.err.println("Empty symbol table");
+        //     System.exit(-1);
+        // }
 
-        if (localSym != null) {
-            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
-                    "Identifier multiply-declared");
+        // if (localSym != null) {
+        //     ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
+        //             "Identifier multiply-declared");
 
-            return globalSym;
-        }
+        //     return globalSym;
+        // }
 
         try {
             if (myType instanceof StructNode) {
@@ -369,7 +369,7 @@ class VarDeclNode extends DeclNode {
             System.err.println("Identifier multiply-declared");
             System.exit(-1);
         } catch (IllegalArgumentException e) {
-            System.err.println("Illegal argument");
+            System.err.println("Illegal argument 1");
             System.exit(-1);
         }
 
@@ -417,7 +417,7 @@ class FnDeclNode extends DeclNode {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                     "Identifier multiply-declared");
         } catch (IllegalArgumentException e) {
-            System.err.println("Illegal argument");
+            System.err.println("Illegal argument 2");
             System.exit(-1);
         }
 
@@ -482,7 +482,7 @@ class FormalDeclNode extends DeclNode {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                     "Identifier multiply-declared");
         } catch (IllegalArgumentException e) {
-            System.err.println("Illegal argument");
+            System.err.println("Illegal argument 3");
             System.exit(-1);
         }
 
@@ -520,7 +520,7 @@ class StructDeclNode extends DeclNode {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                     "Identifier multiply-declared");
         } catch (IllegalArgumentException e) {
-            System.err.println("Illegal argument");
+            System.err.println("Illegal argument 4");
             System.exit(-1);
         }
 
