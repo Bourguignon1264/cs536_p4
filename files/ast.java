@@ -368,6 +368,9 @@ class VarDeclNode extends DeclNode {
         } catch (DuplicateSymException e) {
             System.err.println("Identifier multiply-declared");
             System.exit(-1);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Illegal argument");
+            System.exit(-1);
         }
 
         return globalSym;
@@ -413,6 +416,9 @@ class FnDeclNode extends DeclNode {
         } catch (DuplicateSymException e) {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                     "Identifier multiply-declared");
+        } catch (IllegalArgumentException e) {
+            System.err.println("Illegal argument");
+            System.exit(-1);
         }
 
         symTable.addScope();
@@ -475,6 +481,9 @@ class FormalDeclNode extends DeclNode {
         } catch (DuplicateSymException e) {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                     "Identifier multiply-declared");
+        } catch (IllegalArgumentException e) {
+            System.err.println("Illegal argument");
+            System.exit(-1);
         }
 
         return sym;
@@ -510,6 +519,9 @@ class StructDeclNode extends DeclNode {
         } catch (DuplicateSymException e) {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                     "Identifier multiply-declared");
+        } catch (IllegalArgumentException e) {
+            System.err.println("Illegal argument");
+            System.exit(-1);
         }
 
         return null;
