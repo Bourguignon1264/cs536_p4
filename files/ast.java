@@ -144,8 +144,19 @@ class DeclListNode extends ASTnode {
 
     public List<Sym> analysis(SymTable symTable) {
         List<Sym> symList = new ArrayList<Sym>();
+
         for (int i = 0; i < myDecls.size(); i++) {
-            symList.add(myDecls.get(i).analysis(symTable));
+            DeclNode singleDec = (DeclNode) myDecls.get(i);
+            symList.add(singleDec.analysis(symTable));
+        }
+        return symList;
+    }
+
+    public List<Sym> analysis(SymTable symTable, SymTable parent) {
+        List<Sym> symList = new ArrayList<Sym>();
+        for (int i = 0; i < myDecls.size(); i++) {
+            VarDeclNode singleDec = (VarDeclNode) myDecls.get(i);
+            symList.add(singleDec.analysis(symTable, parent));
         }
         return symList;
     }
@@ -271,6 +282,7 @@ abstract class DeclNode extends ASTnode {
     abstract public Sym analysis(SymTable symTable);
 }
 
+// TODO: change
 class VarDeclNode extends DeclNode {
     public VarDeclNode(TypeNode type, IdNode id, int size) {
         myType = type;
