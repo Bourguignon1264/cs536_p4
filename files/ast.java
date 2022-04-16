@@ -304,6 +304,7 @@ class VarDeclNode extends DeclNode {
         Sym localSym = null;
         int errCount = 0;
 
+        // if type void, error
         if (myType instanceof VoidNode) {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                     "Non-function declared void");
@@ -311,15 +312,18 @@ class VarDeclNode extends DeclNode {
             errCount++;
         }
 
+        //if struct node
         if (myType instanceof StructNode) {
             structId = ((StructNode)myType).getId();
             try {
+                // look up if there is duplicate
                 globalSym = symTable.lookupGlobal(structId);
             } catch(EmptySymTableException e) {
                 System.err.println("Empty symbol table");
                 System.exit(-1);
             }
 
+            //if it doesn't exist, error
             if (globalSym == null) {
                 ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                         "Identifier undeclared");
@@ -327,8 +331,10 @@ class VarDeclNode extends DeclNode {
                 errCount++;
             }
 
+            // if it exists
             else {
                 try {
+                    //if the look up isn't type struct, error
                     if (!symTable.lookupGlobal(structId).getType().equals("struct")) {
                         ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                                 "Name of struct type invalid");
@@ -342,13 +348,15 @@ class VarDeclNode extends DeclNode {
             }
         }
 
+
         try {
+            // look up local
             localSym = symTable.lookupLocal(myId.name());
         } catch(EmptySymTableException e) {
             System.err.println("Empty symbol table");
             System.exit(-1);
         }
-
+        // if it exists, error
         if (localSym != null) {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                     "Identifier multiply-declared");
@@ -360,6 +368,7 @@ class VarDeclNode extends DeclNode {
         return globalSym;
     }
 
+    // helper class of varDeclNode
     public Sym helperVar(Sym helpGlobalSym, String helpStructId, SymTable helpSymTable) {
         try {
             if (myType instanceof StructNode) {
@@ -417,6 +426,7 @@ class FnDeclNode extends DeclNode {
         FnSym sym = null;
 
         try {
+            //add the id/name of the function to symbol table, catch exceptions.errors
             sym = new FnSym(myType.getSymbol().toString(), myFormalsList.size());
             symTable.addDecl(myId.name(), sym);
             myId.setSym(sym);
@@ -431,12 +441,16 @@ class FnDeclNode extends DeclNode {
             System.exit(-1);
         }
 
+        // add new scope
         symTable.addScope();
 
+        // analyze formalslist
         myFormalsList.analysis(symTable);
+        // analyze the function
         myBody.analysis(symTable);
 
         try {
+            //remove scope
             symTable.removeScope();
         } catch(EmptySymTableException e) {
             System.err.println("Empty symbol table");
@@ -475,13 +489,14 @@ class FormalDeclNode extends DeclNode {
         Sym sym = null;
 
         try {
+            //if type node, error
             if (myType instanceof VoidNode) {
                 ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(),
                         "Non-function declared void");
 
                 return sym;
             }
-
+            //create and add sym to table, catch errors/exceptions
             sym = new Sym(myType.getSymbol().toString());
             symTable.addDecl(myId.name(), sym);
             myId.setSym(sym);
@@ -518,9 +533,11 @@ class StructDeclNode extends DeclNode {
 
     public Sym analysis(SymTable symTable) {
         SymTable parent = new SymTable();
+        //Analysis the struct fields
         myDeclList.analysis(parent, symTable);
 
         try {
+            //add to symbol table, catch any exceptions/errors
             symTable.addDecl(myId.name(), new StructDefSym(parent));
             myId.setSym(symTable.lookupGlobal(myId.name()));
         } catch (EmptySymTableException e) {
